@@ -8,3 +8,4 @@ Burp extension to make extracting details from requests a bit easier
 * Add support for selecting multiple requests
 * Look into removing the port number from Copy URL
 * Keyboard shortcuts?
+* Come up witha less rubbish name
