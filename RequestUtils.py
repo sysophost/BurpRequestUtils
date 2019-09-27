@@ -48,7 +48,7 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
 
     def copy_path(self, invocation):
         http_traffic = self.context.getSelectedMessages()
-        if len(http_traffic) != 0:
+        if http_traffic:
             httpReqResp = http_traffic[0].getRequest()  #This returns a byte[]
             httpService = http_traffic[0].getHttpService() #This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
