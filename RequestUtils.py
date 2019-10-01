@@ -7,6 +7,7 @@ from burp import IContextMenuInvocation
 
 from java.util import ArrayList
 from javax.swing import JMenuItem
+from javax.swing import JMenu
 from java.awt import Toolkit
 from java.awt.datatransfer import StringSelection
 from java.awt.datatransfer import Clipboard
@@ -22,12 +23,17 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
 
     def createMenuItems(self, invocation):
         self.context = invocation
+
+        subMenu = JMenu("Copy Things")
+        subMenu.add(JMenuItem("Copy host only", actionPerformed=self.copy_host))
+        subMenu.add(JMenuItem("Copy path only", actionPerformed=self.copy_path))
+        subMenu.add(JMenuItem("Copy URL without parameters", actionPerformed=self.copy_url))
+        subMenu.add(JMenuItem("Copy parameters", actionPerformed=self.copy_parameters))
+        subMenu.add(JMenuItem("Copy headers", actionPerformed=self.copy_headers))
+
         menu_list = ArrayList()
-        menu_list.add(JMenuItem("Copy host only", actionPerformed=self.copy_host))
-        menu_list.add(JMenuItem("Copy path only", actionPerformed=self.copy_path))
-        menu_list.add(JMenuItem("Copy URL without parameters", actionPerformed=self.copy_url))
-        menu_list.add(JMenuItem("Copy parameters", actionPerformed=self.copy_parameters))
-        menu_list.add(JMenuItem("Copy headers", actionPerformed=self.copy_headers))
+        menu_list.add(subMenu)
+        
         return menu_list
 
     def _copy_to_clipboard(self, text):
