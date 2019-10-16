@@ -33,7 +33,6 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
 
         menu_list = ArrayList()
         menu_list.add(subMenu)
-        
         return menu_list
 
     def _copy_to_clipboard(self, text):
@@ -47,29 +46,50 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
 
     def copy_host(self, invocation):
         http_traffic = self.context.getSelectedMessages()
-        if http_traffic:
-            service = http_traffic[0].getHttpService() #This returns an IHttpService object
+        selected_hosts = []
+        for http_request in http_traffic:
+            service = http_request.getHttpService() #This returns an IHttpService object
             hostname = service.getHost()
-            self._copy_to_clipboard(hostname)
+
+            if hostname not in selected_hosts:
+                selected_hosts.append(hostname)
+
+        selected_hosts.sort()
+        all_hosts = ('\n'.join(selected_hosts))
+        self._copy_to_clipboard(all_hosts)
 
     def copy_path(self, invocation):
         http_traffic = self.context.getSelectedMessages()
-        if http_traffic:
-            httpReqResp = http_traffic[0].getRequest()  #This returns a byte[]
-            httpService = http_traffic[0].getHttpService() #This returns a IHttpService object
+        selected_urls = []
+        for http_request in http_traffic:
+            httpReqResp = http_request.getRequest() #This returns a byte[]
+            httpService = http_request.getHttpService() #This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             url = reqInfo.getUrl().getPath()
-            self._copy_to_clipboard(url)
+
+            if url not in selected_urls:
+                selected_urls.append(url)
+
+        selected_urls.sort()
+        all_urls = ('\n'.join(selected_urls))
+        self._copy_to_clipboard(all_urls)
 
     def copy_url(self, invocation):
         http_traffic = self.context.getSelectedMessages()
-        if http_traffic:
-            httpReqResp = http_traffic[0].getRequest() #This returns a byte[]
-            httpService = http_traffic[0].getHttpService() #This returns a IHttpService object
+        selected_urls = []
+        for http_request in http_traffic:
+            httpReqResp = http_request.getRequest() #This returns a byte[]
+            httpService = http_request.getHttpService() #This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             url = reqInfo.getUrl()
             urlString = url.toString().split("?", 1)[0]
-            self._copy_to_clipboard(urlString)
+
+            if urlString not in selected_urls:
+                selected_urls.append(urlString)
+
+        selected_urls.sort()
+        all_urls = ('\n'.join(selected_urls))
+        self._copy_to_clipboard(all_urls)
 
     def copy_parameters(self, invocation):
         http_traffic = self.context.getSelectedMessages()
