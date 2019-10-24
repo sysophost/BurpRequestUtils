@@ -85,7 +85,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
             httpService = http_request.getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             url = reqInfo.getUrl()
-            urlString = url.toString().split("?", 1)[0]
+            urlString = str(url).split("?", 1)[0]
 
             if urlString not in selected_urls:
                 selected_urls.append(urlString)
@@ -126,14 +126,15 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
 
     def copy_headers(self, invocation):
         http_traffic = self.context.getSelectedMessages()
-        if http_traffic:
-            httpReqResp = http_traffic[0].getRequest()  # This returns a byte[]
-            httpService = http_traffic[0].getHttpService()  # This returns a IHttpService object
+        selected_headers = []
+        for http_request in http_traffic:
+            httpReqResp = http_request.getRequest()  # This returns a byte[]
+            httpService = http_request.getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             headers = reqInfo.getHeaders()  # This returns java.util.List<java.lang.String>
 
-            allHeaders = ""
             for h in headers:
-                allHeaders += h + "\r\n"
+                print h
+                selected_headers.append(str(h))
 
-            self._copy_to_clipboard(allHeaders)
+            self._copy_to_clipboard(selected_headers)
