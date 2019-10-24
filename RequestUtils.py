@@ -12,9 +12,10 @@ from java.awt import Toolkit
 from java.awt.datatransfer import StringSelection
 from java.awt.datatransfer import Clipboard
 
-class BurpExtender(IBurpExtender,IContextMenuFactory):
 
-    def	registerExtenderCallbacks(self, callbacks):
+class BurpExtender(IBurpExtender, IContextMenuFactory):
+
+    def registerExtenderCallbacks(self, callbacks):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
         self.callbacks.setExtensionName("Request Utils")
@@ -28,7 +29,9 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
         subMenu.add(JMenuItem("Copy host only", actionPerformed=self.copy_host))
         subMenu.add(JMenuItem("Copy path only", actionPerformed=self.copy_path))
         subMenu.add(JMenuItem("Copy URL without parameters", actionPerformed=self.copy_url))
-        subMenu.add(JMenuItem("Copy parameters", actionPerformed=self.copy_parameters))
+        subMenu.add(JMenuItem("Copy query parameters", actionPerformed=self.copy_parameters))
+        subMenu.add(JMenuItem("Copy body parameters", actionPerformed=self.copy_parameters))
+        subMenu.add(JMenuItem("Copy cookies", actionPerformed=self.copy_parameters))
         subMenu.add(JMenuItem("Copy headers", actionPerformed=self.copy_headers))
 
         menu_list = ArrayList()
@@ -48,7 +51,7 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
         http_traffic = self.context.getSelectedMessages()
         selected_hosts = []
         for http_request in http_traffic:
-            service = http_request.getHttpService() #This returns an IHttpService object
+            service = http_request.getHttpService()  # This returns an IHttpService object
             hostname = service.getHost()
 
             if hostname not in selected_hosts:
@@ -62,8 +65,8 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
         http_traffic = self.context.getSelectedMessages()
         selected_urls = []
         for http_request in http_traffic:
-            httpReqResp = http_request.getRequest() #This returns a byte[]
-            httpService = http_request.getHttpService() #This returns a IHttpService object
+            httpReqResp = http_request.getRequest()  # This returns a byte[]
+            httpService = http_request.getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             url = reqInfo.getUrl().getPath()
 
@@ -78,8 +81,8 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
         http_traffic = self.context.getSelectedMessages()
         selected_urls = []
         for http_request in http_traffic:
-            httpReqResp = http_request.getRequest() #This returns a byte[]
-            httpService = http_request.getHttpService() #This returns a IHttpService object
+            httpReqResp = http_request.getRequest()  # This returns a byte[]
+            httpService = http_request.getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             url = reqInfo.getUrl()
             urlString = url.toString().split("?", 1)[0]
@@ -92,22 +95,43 @@ class BurpExtender(IBurpExtender,IContextMenuFactory):
         self._copy_to_clipboard(all_urls)
 
     def copy_parameters(self, invocation):
+        menu_switcher = {
+            "Copy query parameters": 0,
+            "Copy body parameters": 1,
+            "Copy cookies": 2
+        }
+        param_type = menu_switcher.get(invocation.getSource().text)
+
         http_traffic = self.context.getSelectedMessages()
+        selected_params = []
         if http_traffic:
-            httpReqResp = http_traffic[0].getRequest() #This returns a byte[]
-            httpService = http_traffic[0].getHttpService() #This returns a IHttpService object
+            httpReqResp = http_traffic[0].getRequest()  # This returns a byte[]
+            httpService = http_traffic[0].getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
-            params = reqInfo.getParameters() #This returns java.util.List<IParameter>
-            print(params)
-            self._copy_to_clipboard(params)
+            params = reqInfo.getParameters()  # This returns java.util.List<IParameter>
+
+            for param in params:
+                n = param.getName()
+                v = param.getValue()
+                t = param.getType()  # 0 = query param, 1 = body param, 2 = cookie
+
+                if t == param_type:
+                    arrayItem = '{0}={1}'.format(n, v)
+                    print(arrayItem)
+                    if arrayItem not in selected_params:
+                        selected_params.append(arrayItem)
+
+            selected_params.sort()
+            all_params = ('\n'.join(selected_params))
+            self._copy_to_clipboard(all_params)
 
     def copy_headers(self, invocation):
         http_traffic = self.context.getSelectedMessages()
         if http_traffic:
-            httpReqResp = http_traffic[0].getRequest() #This returns a byte[]
-            httpService = http_traffic[0].getHttpService() #This returns a IHttpService object
+            httpReqResp = http_traffic[0].getRequest()  # This returns a byte[]
+            httpService = http_traffic[0].getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
-            headers = reqInfo.getHeaders() #This returns java.util.List<java.lang.String>
+            headers = reqInfo.getHeaders()  # This returns java.util.List<java.lang.String>
 
             allHeaders = ""
             for h in headers:
