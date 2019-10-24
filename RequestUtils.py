@@ -129,7 +129,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
 
             selected_params.sort()
             all_params = ('\n'.join(selected_params))
-            self._copy_to_clipboard(all_3params)
+            self._copy_to_clipboard(all_params)
 
     def copy_headers(self, invocation):
         http_traffic = self.context.getSelectedMessages()
