@@ -122,7 +122,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
 
             selected_params.sort()
             all_params = ('\n'.join(selected_params))
-            self._copy_to_clipboard(all_params)
+            self._copy_to_clipboard(all_3params)
 
     def copy_headers(self, invocation):
         http_traffic = self.context.getSelectedMessages()
@@ -133,8 +133,10 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
             reqInfo = self._get_request_info(httpService, httpReqResp)
             headers = reqInfo.getHeaders()  # This returns java.util.List<java.lang.String>
 
-            for h in headers:
-                print h
-                selected_headers.append(str(h))
+            for header in headers:
+                selected_headers.append(header)
 
-            self._copy_to_clipboard(selected_headers)
+            selected_headers.append('')  # add extra empty header to break up requests
+
+            all_headers = ('\n'.join(selected_headers))
+            self._copy_to_clipboard(all_headers)
