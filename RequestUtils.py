@@ -104,9 +104,9 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
 
         http_traffic = self.context.getSelectedMessages()
         selected_params = []
-        if http_traffic:
-            httpReqResp = http_traffic[0].getRequest()  # This returns a byte[]
-            httpService = http_traffic[0].getHttpService()  # This returns a IHttpService object
+        for http_request in http_traffic:
+            httpReqResp = http_request.getRequest()  # This returns a byte[]
+            httpService = http_request.getHttpService()  # This returns a IHttpService object
             reqInfo = self._get_request_info(httpService, httpReqResp)
             params = reqInfo.getParameters()  # This returns java.util.List<IParameter>
 
