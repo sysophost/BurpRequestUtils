@@ -47,6 +47,11 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         IRequestInfo = self.helpers.analyzeRequest(IHttpService, httpRequestBytes)
         return IRequestInfo
 
+    def _strip_common_ports(self, url):
+        url = url.replace(':80/', '/')  # need the trailing slash here to prevent :8080 being substringed to 80
+        url = url.replace(':443/', '/')
+        return url
+
     def copy_host(self, invocation):
         http_traffic = self.context.getSelectedMessages()
         selected_hosts = []
@@ -86,6 +91,8 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
             reqInfo = self._get_request_info(httpService, httpReqResp)
             url = reqInfo.getUrl()
             urlString = str(url).split("?", 1)[0]
+
+            urlString = self._strip_common_ports(urlString)
 
             if urlString not in selected_urls:
                 selected_urls.append(urlString)
