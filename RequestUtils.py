@@ -117,7 +117,6 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
 
                 if t == param_type:
                     arrayItem = '{0}={1}'.format(n, v)
-                    print(arrayItem)
                     if arrayItem not in selected_params:
                         selected_params.append(arrayItem)
 
