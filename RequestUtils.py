@@ -47,6 +47,17 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         IRequestInfo = self.helpers.analyzeRequest(IHttpService, httpRequestBytes)
         return IRequestInfo
 
+    def _get_response_info(self, httpResponseBytes):
+        IResponseInfo = self.helpers.analyzeResponse(httpResponseBytes)
+        return IResponseInfo
+
+    def _is_request(self):
+        # consts taken from https://portswigger.net/burp/extender/api/constant-values.html#burp.IContextMenuInvocation.CONTEXT_MESSAGE_EDITOR_REQUEST 
+        if self.context.getInvocationContext() in [0, 2]:
+            return True
+        else: 
+            return False
+
     def _strip_common_ports(self, url):
         url = url.replace(':80/', '/')  # need the trailing slash here to prevent :8080 being substringed to 80
         url = url.replace(':443/', '/')
@@ -69,6 +80,7 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
     def copy_path(self, invocation):
         http_traffic = self.context.getSelectedMessages()
         selected_urls = []
+
         for http_request in http_traffic:
             httpReqResp = http_request.getRequest()  # This returns a byte[]
             httpService = http_request.getHttpService()  # This returns a IHttpService object
@@ -102,27 +114,40 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         self._copy_to_clipboard(all_urls)
 
     def copy_parameters(self, invocation):
+        http_traffic = self.context.getSelectedMessages()
         menu_switcher = {
             "Copy query parameters": 0,
             "Copy body parameters": 1,
             "Copy cookies": 2
         }
-        param_type = menu_switcher.get(invocation.getSource().text)
 
-        http_traffic = self.context.getSelectedMessages()
+        param_type = menu_switcher.get(invocation.getSource().text)
         selected_params = []
         for http_request in http_traffic:
-            httpReqResp = http_request.getRequest()  # This returns a byte[]
-            httpService = http_request.getHttpService()  # This returns a IHttpService object
-            reqInfo = self._get_request_info(httpService, httpReqResp)
-            params = reqInfo.getParameters()  # This returns java.util.List<IParameter>
+            if self._is_request():
+                httpReqResp = http_request.getRequest()  # This returns a byte[]
+                httpService = http_request.getHttpService()  # This returns a IHttpService object
+                reqInfo = self._get_request_info(httpService, httpReqResp)
+                params = reqInfo.getParameters()  # This returns java.util.List<IParameter>
 
-            for param in params:
-                n = param.getName()
-                v = param.getValue()
-                t = param.getType()  # 0 = query param, 1 = body param, 2 = cookie
+                for param in params:
+                    n = param.getName()
+                    v = param.getValue()
+                    t = param.getType()  # 0 = query param, 1 = body param, 2 = cookie
 
-                if t == param_type:
+                    if t == param_type:
+                        arrayItem = '{0}={1}'.format(n, v)
+                        if arrayItem not in selected_params:
+                            selected_params.append(arrayItem)
+            else:
+                httpReqResp = http_request.getResponse()  # This returns a byte[]
+                respInfo = self._get_response_info(httpReqResp)
+                cookies = respInfo.getCookies()  # This returns java.util.List<ICookie>
+
+                for cookie in cookies:
+                    n = cookie.getName()
+                    v = cookie.getValue()
+
                     arrayItem = '{0}={1}'.format(n, v)
                     if arrayItem not in selected_params:
                         selected_params.append(arrayItem)
@@ -135,10 +160,15 @@ class BurpExtender(IBurpExtender, IContextMenuFactory):
         http_traffic = self.context.getSelectedMessages()
         selected_headers = []
         for http_request in http_traffic:
-            httpReqResp = http_request.getRequest()  # This returns a byte[]
-            httpService = http_request.getHttpService()  # This returns a IHttpService object
-            reqInfo = self._get_request_info(httpService, httpReqResp)
-            headers = reqInfo.getHeaders()  # This returns java.util.List<java.lang.String>
+            if self._is_request():
+                httpReqResp = http_request.getRequest()  # This returns a byte[]
+                httpService = http_request.getHttpService()  # This returns a IHttpService object
+                reqInfo = self._get_request_info(httpService, httpReqResp)
+                headers = reqInfo.getHeaders()  # This returns java.util.List<java.lang.String>
+            else:
+                httpReqResp = http_request.getResponse()  # This returns a byte[]
+                respInfo = self._get_response_info(httpReqResp)
+                headers = respInfo.getHeaders()  # This returns java.util.List<java.lang.String>
 
             for header in headers:
                 selected_headers.append(header)
