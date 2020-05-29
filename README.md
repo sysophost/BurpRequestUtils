@@ -9,4 +9,4 @@ Burp extension to make extracting details from requests a bit easier
 * ~Look into removing the port number from Copy URL~
 * Keyboard shortcuts?
 * Come up with a less rubbish name
-* Add support for response body
+* ~~Add support for response body~~
